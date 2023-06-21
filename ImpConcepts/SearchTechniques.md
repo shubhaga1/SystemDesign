@@ -32,5 +32,4 @@ TF-IDF is widely used in various applications, including:
 TF-IDF provides a quantitative measure of term importance, enabling effective search and analysis of textual data.
 
 ---
-
-Feel free to explore the [GitHub repository](https://github.com) for detailed code examples and implementations of TF-IDF in different programming languages. Remember, TF-IDF is just one of the many techniques used in information retrieval and text analysis, and its effectiveness can vary depending on the specific task and domain.
+Remember, TF-IDF is just one of the many techniques used in information retrieval and text analysis, and its effectiveness can vary depending on the specific task and domain.
