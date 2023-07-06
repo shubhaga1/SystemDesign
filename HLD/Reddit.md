@@ -1,0 +1,7 @@
+# Reddit HLD
+
+## Functional requirements
+
+
+
+## 
