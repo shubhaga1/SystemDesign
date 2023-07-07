@@ -1,12 +1,13 @@
 ## LLD Basic
 
-## LLD 1
+## LLD 2
 
 ![OOPS Basics](image.png)
 ![Alt text](image-1.png)
-![Alt text](image-2.png)
+![Alt text](image-10.png)
 
-## LLD 2
+
+## LLD 1
 
 
 ## LLD 3
