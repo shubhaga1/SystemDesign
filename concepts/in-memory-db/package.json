@@ -1,0 +1,12 @@
+{
+  "name": "in-memory-db-poc",
+  "version": "1.0.0",
+  "description": "Redis POCs — basics, geolocation, caching patterns",
+  "scripts": {
+    "basics": "node 01_redis_basics.js",
+    "geo": "node 02_geolocation.js"
+  },
+  "dependencies": {
+    "redis": "^4.6.13"
+  }
+}

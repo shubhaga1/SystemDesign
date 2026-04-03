@@ -1,69 +1,87 @@
-# System Design In-Depth Repository
+# System Design — Learning Repository
 
-## Introduction
+Structured notes, concepts, and runnable POCs for mastering system design.
 
-Welcome to the System Design In-Depth repository! This repository aims to provide a comprehensive resource for learning and understanding system design concepts. It covers both theoretical aspects and practical implementations of system design, including High-Level Design (HLD) and Low-Level Design (LLD) of existing companies.
+---
 
-## Purpose
+## Learning Path
 
-The primary purpose of this repository is to serve as a learning hub for individuals interested in system design and architecture. Whether you are a software engineer, a computer science student, or an enthusiast looking to expand your knowledge, this repository is designed to cater to your needs.
+| # | Folder | What you learn |
+| --- | --- | --- |
+| 1 | `concepts/` | Core building blocks — cache, DB, queues, CDN |
+| 2 | `HLD/` | High-level design — architecture diagrams, trade-offs |
+| 3 | `LLD/` | Low-level design — class diagrams, OOP, design patterns |
+| 4 | `API/` | REST, GraphQL, gRPC — design and versioning |
+| 5 | `project/` | End-to-end system design walkthroughs |
 
-## Content Overview
+---
 
-The repository is divided into two main sections: theory and practical.
+## concepts/
 
-### 1. Theory
+Deep dives into individual system building blocks.  
+Each folder has a README explaining the concept + runnable code POCs.
 
-In the theory section, we dive deep into the fundamental concepts and principles of system design. This includes:
+| Folder | Topic |
+| --- | --- |
+| `in-memory-db/` | Redis — caching, pub/sub, geolocation, leaderboards |
 
-- Understanding different architectural styles and patterns
-- Exploring various scalability and availability strategies
-- Examining trade-offs and design considerations
-- Analyzing performance optimization techniques
-- Investigating data storage and retrieval mechanisms
-- Investigating caching and caching strategies
-- Exploring distributed systems and fault tolerance
-- Discussing security and authentication mechanisms
-- And much more!
+---
 
-The theory section aims to provide a solid foundation in system design principles, enabling you to approach real-world design challenges with confidence and expertise.
+## How to run POCs
 
-### 2. Practical
+Most POCs are Node.js — no framework needed.
 
-In the practical section, we focus on applying the knowledge gained from the theory section to real-world scenarios. We delve into the High-Level Design (HLD) and Low-Level Design (LLD) of existing companies. By examining the architecture and design choices made by successful companies, we gain valuable insights and learn best practices. Some of the companies we will cover include:
+```bash
+# Start dependencies (Redis etc.)
+docker-compose up -d
 
-- Netflix
-- Uber
-- Airbnb
-- Amazon
-- Google
-- Facebook
-- And many more!
+# Run any POC
+node 02_geolocation.js
+```
 
-Each practical example will provide a detailed analysis of the system architecture, components, scalability strategies, data storage mechanisms, and other relevant design aspects. By studying these real-world examples, you'll gain practical experience and learn how to tackle complex design challenges.
+---
 
-## Contribution
+## Key System Design Concepts (quick reference)
 
-This repository is open to contributions from the community. If you have expertise in system design or if you want to share your practical experiences, you are encouraged to contribute by adding new content, suggesting improvements, or submitting case studies of other companies. Together, we can build a valuable resource that benefits the entire community.
+### Scalability
+- **Vertical scaling** — bigger machine (CPU, RAM)
+- **Horizontal scaling** — more machines (preferred for web)
+- **Load balancer** — distributes traffic across servers
 
-To contribute, please follow the guidelines outlined in the [CONTRIBUTING.md](./CONTRIBUTING.md) file.
+### Storage
+| Type | Examples | Use when |
+| --- | --- | --- |
+| Relational DB | PostgreSQL, MySQL | Structured data, ACID transactions |
+| NoSQL | MongoDB, Cassandra | Flexible schema, massive scale |
+| In-memory | Redis, Memcached | Sub-millisecond reads, caching |
+| Object store | S3 | Files, images, backups |
+| Search | Elasticsearch | Full-text search, log analysis |
 
-## Ownership and Content Creation
+### CAP Theorem
+Every distributed system can only guarantee 2 of 3:
+- **C**onsistency — every read gets the latest write
+- **A**vailability — every request gets a response
+- **P**artition tolerance — system works despite network splits
 
-The System Design In-Depth repository is owned and maintained by Shubham Garg. You can find more information about the author on LinkedIn: [Shubham Garg](https://www.linkedin.com/in/shubhaga/).
+Most systems choose **AP** (available + partition tolerant) or **CP** (consistent + partition tolerant).
 
-All the content in this repository, including the theory, practical examples, and case studies, is created by Shubham Garg unless otherwise stated. The goal is to provide accurate and reliable information to help individuals learn and understand system design concepts effectively.
+### Caching patterns
+| Pattern | How | Use case |
+| --- | --- | --- |
+| Cache-aside | App checks cache, on miss reads DB + fills cache | Most common |
+| Write-through | Write to cache AND DB together | Strong consistency |
+| Write-behind | Write to cache, async flush to DB | High write throughput |
+| Read-through | Cache sits in front of DB, auto-populates | Transparent to app |
 
-If you have any questions, suggestions, or would like to contribute to this repository, feel free to reach out to Shubham Garg on LinkedIn.
+### Numbers every engineer should know
+```
+L1 cache read:          0.5 ns
+Main memory read:       100 ns
+SSD read:               100 µs
+Network round-trip:     1–10 ms
+HDD read:               10 ms
+```
 
-Let's together make this repository a valuable resource for the system design community!
+---
 
-## Conclusion
-
-The System Design In-Depth repository is your go-to resource for understanding system design concepts from both a theoretical and practical perspective. Whether you are a beginner or an experienced professional, this repository will provide you with the knowledge and insights necessary to design robust, scalable, and efficient systems.
-
-So, let's embark on this exciting journey of exploring system design in-depth! Start by diving into the theory section, and then delve into the practical examples to see how the concepts are applied in real-world scenarios. Happy learning and designing!
-
-> Note: This repository is a work in progress, and new content will be added regularly. Be sure to watch this repository for updates and stay tuned for more insightful articles and case studies!
-
-**Disclaimer:** The content provided in this repository is for educational purposes only. The examples and case studies of existing companies are based on public information and may not represent the current state of their systems. The goal is to learn from their architectural decisions and design strategies rather than replicate them exactly.
+*Work in progress — adding concepts and POCs regularly.*
