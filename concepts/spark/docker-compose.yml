@@ -1,0 +1,33 @@
+version: '3.8'
+
+# Spark standalone cluster — 1 master + 1 worker
+# Run: docker-compose up -d
+# Submit job: docker exec spark-master spark-submit /opt/spark-apps/01_basics.py
+# Spark UI: http://localhost:8080
+
+services:
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+    ports:
+      - "8080:8080"   # Spark Master Web UI
+      - "7077:7077"   # Spark Master port (workers connect here)
+    volumes:
+      - ./:/opt/spark-apps   # mount this folder into container
+
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark-master
+    volumes:
+      - ./:/opt/spark-apps
