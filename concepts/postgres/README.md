@@ -7,6 +7,9 @@ Runnable SQL POCs covering core Postgres usage + security threats from the AWS s
 ## Quick start
 
 ```bash
+# Start Docker
+open -a Docker
+
 # Start Postgres
 docker-compose up -d
 
