@@ -126,6 +126,65 @@ Git stores everything by content hash — same content = same hash. This is why 
 
 ---
 
+## fetch vs pull vs push
+
+```
+fetch  = download changes from remote, but do NOT apply to your branch
+         → updates origin/main pointer, your local main is untouched
+         → safe — never changes your working files
+
+pull   = fetch + merge in one step
+         → downloads AND applies changes to your current branch
+         → git pull = git fetch + git merge origin/main
+
+push   = upload your local commits to remote
+         → opposite of pull
+```
+
+```bash
+git fetch                  # download, don't apply
+git fetch origin           # same, explicit remote name
+
+git log origin/main        # see what was fetched (remote state)
+git diff main origin/main  # compare your branch vs fetched remote
+
+git pull                   # fetch + merge (most common)
+git pull --rebase          # fetch + rebase (cleaner history)
+
+git push                   # upload your commits
+git push -u origin main    # push + set upstream
+git push --force           # overwrite remote (after history rewrite)
+```
+
+**When to use fetch vs pull:**
+```
+fetch:  you want to see what changed on remote before merging
+        safe to run anytime, won't break anything
+
+pull:   you're ready to bring in remote changes now
+        risky if you have local uncommitted changes — stash first
+
+push:   you finished work and want it on GitHub
+```
+
+```
+Timeline:
+
+Your machine:   A → B → C (main)
+GitHub:         A → B → D (someone else pushed D)
+
+git fetch:      downloads D, updates origin/main → D
+                your main still at C, nothing changed in your files
+
+git pull:       downloads D + merges → your main becomes A→B→C+D merge
+                or with --rebase: A→B→D→C (your C on top)
+
+git push:       would FAIL (not fast-forward)
+                must pull/rebase first, then push
+```
+
+---
+
 ## Double dash vs single dash
 
 ```
