@@ -4,20 +4,48 @@ Runnable SQL POCs covering core Postgres usage + security threats from the AWS s
 
 ---
 
-## Quick start
+## How to run SQL files
 
+### Option 1 — SQLite (offline, no Docker needed, instant)
 ```bash
-# Start Docker
+# Run against in-memory SQLite database
+./run.sh 08_where_having_groupby.sql
+
+# Works with any learning file that doesn't use Postgres-specific syntax
+```
+
+### Option 2 — Postgres via Docker (full Postgres, recommended)
+```bash
+# Step 1: open Docker Desktop
 open -a Docker
 
-# Start Postgres
+# Step 2: start Postgres container
 docker-compose up -d
 
-# Connect
-psql -h localhost -U admin -d learndb
+# Step 3: verify it's running
+docker ps   # should show postgres-local with status Up
 
-# Run any file
-psql -h localhost -U admin -d learndb -f 01_basics.sql
+# Step 4: run a file against Postgres
+./run.sh 01_basics.sql pg
+
+# Step 5: connect interactively
+docker exec -it postgres-local psql -U admin -d learndb
+
+# Or if psql is installed locally (brew install postgresql@16)
+psql -h localhost -U admin -d learndb
+```
+
+### Option 3 — pgAdmin (GUI)
+```bash
+open -a "pgAdmin 4"
+# Connection: host=localhost port=5432 user=admin password=secret123 db=learndb
+# Run SQL: Tools → Query Tool → paste SQL → F5
+```
+
+### run.sh cheat sheet
+```bash
+./run.sh <file.sql>        # SQLite — offline, no setup
+./run.sh <file.sql> pg     # Postgres — Docker must be running
 ```
 
 ---
@@ -26,13 +54,14 @@ psql -h localhost -U admin -d learndb -f 01_basics.sql
 
 | # | File | Covers |
 | --- | --- | --- |
-| 1 | `01_basics.sql` | DDL, DML, JOINs, aggregates, window functions, CTEs, indexes |
-| 2 | `07_window_functions.sql` | RANK, DENSE_RANK, LAG, LEAD, COALESCE, NULLIF, CASE, STRING_AGG, FILTER |
-| 3 | `06_performance.sql` | EXPLAIN, index types, VACUUM, partitioning, JSONB |
-| 4 | `02_roles_and_privileges.sql` | Role creation, least privilege, inheritance pitfalls, RLS |
-| 5 | `03_timing_attacks.sql` | Side-channel attacks, parameterized queries, rate limiting |
-| 6 | `04_extensions_security.sql` | Privilege escalation via extensions, search_path, pgaudit |
-| 7 | `05_logical_replication.sql` | Replication slots, dedicated users, pg_hba.conf, slot monitoring |
+| 1 | `08_where_having_groupby.sql` | WHERE vs HAVING, GROUP BY, execution order |
+| 2 | `01_basics.sql` | DDL, DML, JOINs, aggregates, window functions, CTEs, indexes |
+| 3 | `07_window_functions.sql` | RANK, DENSE_RANK, LAG, LEAD, COALESCE, NULLIF, CASE, STRING_AGG, FILTER |
+| 4 | `06_performance.sql` | EXPLAIN, index types, VACUUM, partitioning, JSONB |
+| 5 | `02_roles_and_privileges.sql` | Role creation, least privilege, inheritance pitfalls, RLS |
+| 6 | `03_timing_attacks.sql` | Side-channel attacks, parameterized queries, rate limiting |
+| 7 | `04_extensions_security.sql` | Privilege escalation via extensions, search_path, pgaudit |
+| 8 | `05_logical_replication.sql` | Replication slots, dedicated users, pg_hba.conf, slot monitoring |
 
 ---
 
