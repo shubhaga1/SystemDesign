@@ -76,13 +76,55 @@ upstream  = which remote branch your local branch tracks
             (where git push/pull go by default)
 ```
 
+### Two starting scenarios
+
+**Scenario A — cloned from GitHub (most common):**
 ```bash
-git remote -v               # see remote URL
-git remote add origin <url> # add remote (after git init)
-git push -u origin main     # push + set upstream in one step
-                            # after this: git push works alone
-git branch -vv              # see upstream for each branch
+git clone https://github.com/shubhaga1/algorithms.git
+# origin is set AUTOMATICALLY — git remembers where you cloned from
+git remote -v   # already shows origin URL
+git push        # works immediately, no setup needed
 ```
+
+**Scenario B — started locally with git init:**
+```bash
+mkdir algorithms && cd algorithms
+git init        # local repo created, NO remote yet
+git add .
+git commit -m "first commit"
+
+git push        # ❌ ERROR: no remote configured — git doesn't know where to push
+```
+
+You must connect it to GitHub yourself. **3 ways to do this:**
+
+```bash
+# Way 1 — manual: create repo on GitHub first, then link
+git remote add origin https://github.com/shubhaga1/algorithms.git
+git push -u origin main
+
+# Way 2 — GitHub CLI: creates GitHub repo AND links in one command
+gh repo create algorithms --public --source . --remote origin --push
+# --source .     = use current folder
+# --remote origin= name it "origin"
+# --push         = push immediately
+
+# Way 3 — GitHub CLI: create repo only, push separately
+gh repo create algorithms --public
+git remote add origin https://github.com/shubhaga1/algorithms.git
+git push -u origin main
+```
+
+```bash
+# Other remote commands
+git remote -v                    # see current remote URL
+git remote set-url origin <url>  # change remote URL
+git remote remove origin         # remove remote (local repo stays)
+git branch -vv                   # see upstream for each branch
+```
+
+**In this project:** algorithms repo was started with `git init` locally,
+so we used `gh repo create` (Way 2) to create and link in one step.
 
 ---
 
