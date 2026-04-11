@@ -1,1 +1,12 @@
 GeoHash.class
+*.class
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# SQLite DB files
+*.db
