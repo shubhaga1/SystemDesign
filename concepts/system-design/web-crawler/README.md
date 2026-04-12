@@ -27,13 +27,13 @@
 
 ## 3. Capacity Planning
 
-| Parameter | Value | Notes |
-|-----------|-------|-------|
+| Parameter | Value | Calculation |
+|-----------|-------|-------------|
 | Total pages | 1 billion | Target crawl size |
 | Avg page size | 100 KB | Per page estimate |
-| Total data/cycle | ~10 PB | Full crawl every 7 days |
-| Daily data volume | ~1.3 PB | 10 PB ÷ 7 |
-| Bandwidth needed | ~3 GB/sec | Sustained throughput |
+| Total data/cycle | ~100 TB | 10^9 × 100 KB = 10^14 bytes = 100 TB |
+| Daily data volume | ~14 TB/day | 100 TB ÷ 7 days |
+| Bandwidth needed | ~160 MB/sec | 14 TB ÷ 86,400 sec ≈ 162 MB/sec |
 
 ---
 
