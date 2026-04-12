@@ -153,9 +153,99 @@ Scheduler queries DB for URLs where `next_crawl_time <= now` and re-queues them.
 ## Files in this folder
 
 ```
-README.md        ← this file (requirements, capacity, workflow, HLD)
-hld.md           ← High Level Design (component diagram, tech choices)
-lld.md           ← Low Level Design (DB schema, class design, APIs)
+README.md           ← this file (requirements, capacity, workflow, HLD, Q&A)
+hld.md              ← High Level Design (component diagram, tech choices)
+lld.md              ← Low Level Design (DB schema, class design, APIs)
+notes_deep_dive.md  ← Q&A deep dives (Cassandra vs MySQL, DNS TTL, Kafka priority)
 code/
-  crawler.py     ← runnable POC (Scheduler, PriorityQueue, BloomFilter, Fetcher)
+  crawler.py        ← runnable POC (Scheduler, PriorityQueue, BloomFilter, Fetcher)
 ```
+
+---
+
+## Q&A — Interview Deep Dives
+
+### Q: How is 200 bytes per URL calculated?
+
+```
+Each URL row in the DB stores:
+  url          TEXT  → avg 80 bytes  (https://cnn.com/article/some-long-title)
+  domain       TEXT  → avg 20 bytes  (cnn.com)
+  status       TEXT  → 10 bytes      (pending/crawling/done)
+  next_crawl   TIMESTAMP → 8 bytes
+  last_crawled TIMESTAMP → 8 bytes
+  crawl_count  INT   → 4 bytes
+  url_id       UUID  → 16 bytes
+  overhead (Cassandra row metadata) → ~50 bytes
+  ─────────────────────────────────────────────
+  Total ≈ 200 bytes per URL
+
+1 billion URLs × 200 bytes = 200 GB
+Redis stores everything in RAM → $200GB RAM is very expensive
+Cassandra stores on disk → $200 GB disk is cheap ($10/month on AWS)
+```
+
+### Q: Why Cassandra over MySQL/Redis/DynamoDB?
+
+```
+Option          Why NOT                              Why YES (Cassandra)
+──────────────────────────────────────────────────────────────────────────
+MySQL           Single write master → bottleneck     —
+                Sharding is manual and painful
+                JOINs not needed here
+
+Redis           All data in RAM → too expensive       Good for DNS cache (small)
+                No complex queries                    NOT for URL DB (billions of rows)
+                TTL-based — URLs need permanent store
+
+DynamoDB        Good option! AWS-managed, scalable   Cassandra: open source, no vendor lock
+                But vendor lock-in to AWS            Self-host or use DataStax
+
+PostgreSQL      Better than MySQL (partitioning)     OK for <100M URLs
+                But still single-master writes        Cassandra wins at billion scale
+
+Cassandra ✅    Distributed writes (no master)
+                Partition key = domain → locality
+                Cheap disk storage
+                Linear scaling (add nodes)
+                CQL query: WHERE domain=? AND next_crawl_at <= now()
+```
+
+### Q: How does Scheduler run every minute?
+
+```
+Production:   Kubernetes CronJob   → schedule: "* * * * *"
+Dev/POC:      APScheduler (Python) → @scheduler.scheduled_job('interval', minutes=1)
+Simplest:     while True: run(); time.sleep(60)
+
+Optimizations (don't scan 1B rows every minute):
+  1. Partition by crawl_date → only query today's bucket (tiny scan)
+  2. Event-driven → after crawl, emit delayed Kafka event for next crawl time
+  3. Separate schedulers per tier: news=hourly, sports=daily, static=weekly
+```
+
+### Q: Why Kafka as Priority Queue? Limitations?
+
+```
+Kafka is FIFO per partition — NOT a true priority queue.
+
+Solution: Separate topics per priority tier
+  Topic: crawler-priority-1-news    ← workers poll this first
+  Topic: crawler-priority-2-sports
+  Topic: crawler-priority-3-static  ← polled last
+
+Workers: weighted round-robin (5 news : 2 sports : 1 static per round)
+  → prevents starvation of lower-priority queues
+
+Alternative: Redis Sorted Set (true priority)
+  ZADD queue 1.0 "url"   → ZPOPMIN always returns lowest score (highest priority)
+  Combine: Kafka (durable store) + Redis Sorted Set (priority routing)
+```
+
+### Q: Kafka alternatives comparison
+
+See: `learning-journal/09-kafka/05_kafka_alternatives.py`
+
+### Q: K8s CronJob for Scheduler — see POC
+
+See: `learning-journal/03-docker-k8s/06_k8s_poc.py`
