@@ -5,17 +5,18 @@ REVISION SYSTEM — Spaced Repetition Auto-Scheduler
 Usage:
   python revise.py              → show what to revise TODAY
   python revise.py add          → log something you just learned
-  python revise.py done <id>    → mark a revision done (✅ confident)
-  python revise.py weak <id>    → mark weak (❌ re-schedule from today)
-  python revise.py all          → show full revision log
+  python revise.py done <id>    → mark done ✅ (confident)
+  python revise.py weak <id>    → mark weak ❌ (re-schedules from today)
+  python revise.py all          → show full log
+  python revise.py review       → ask Claude to audit today's output
 
 How it works:
-  When you learn something → run `python revise.py add`
-  It auto-schedules: D+1, D+3, D+7 from today.
-  Each day: run `python revise.py` → see ONLY today's items.
-  Mark done (✅) or weak (❌ → reschedules again from today).
+  Every git commit → hook auto-adds topic to DB.
+  Scheduled: D+1, D+3, D+7 from learned date.
+  Daily: run `python revise.py` → see ONLY today's items.
+  Mark done ✅ or weak ❌ (reschedules again from today).
 
-No manual date tracking. Fully automatic.
+No manual tracking. Fully automatic via git hooks.
 """
 
 import json
@@ -70,6 +71,10 @@ def add_item(db):
     for r in revisions:
         print(f"   {r['due']}")
 
+def short_file(path):
+    """Show only the filename, not the full path."""
+    return Path(path).name if path else ""
+
 def show_today(db):
     today = str(date.today())
     due = []
@@ -82,34 +87,37 @@ def show_today(db):
                 due.append((item, i, rev))
 
     if not due:
-        print(f"\n🎉 Nothing due today ({today}). Keep learning!")
+        print(f"\n✅ Nothing due today ({today}). Keep learning!")
         return
 
-    print(f"\n{'='*60}")
-    print(f"  REVISE TODAY — {today}  ({len(due)} items)")
-    print(f"{'='*60}")
+    overdue = [(i, r_i, r) for i, r_i, r in due if r["due"] < today]
+    today_due = [(i, r_i, r) for i, r_i, r in due if r["due"] == today]
 
-    by_category = {}
-    for item, rev_idx, rev in due:
-        cat = item["category"]
-        by_category.setdefault(cat, []).append((item, rev_idx, rev))
+    print(f"\n{'━'*52}")
+    print(f"  REVISE — {today}  ({len(due)} items: {len(overdue)} overdue)")
+    print(f"{'━'*52}")
 
-    for cat, items in by_category.items():
-        print(f"\n  [{cat}]")
+    def print_section(items, label):
+        if not items:
+            return
+        print(f"\n  {label}")
+        by_cat = {}
         for item, rev_idx, rev in items:
-            overdue = " ⚠️ OVERDUE" if rev["due"] < today else ""
-            rev_num = SCHEDULE[rev_idx]
-            print(f"    ID={item['id']}  D+{rev_num:<2}  {item['topic']}")
-            print(f"           💡 {item['note']}")
-            if item["file"]:
-                print(f"           📄 {item['file']}")
-            print(f"           Due: {rev['due']}{overdue}")
+            by_cat.setdefault(item["category"], []).append((item, rev_idx, rev))
+        for cat, cat_items in by_cat.items():
+            print(f"  ┌─ {cat}")
+            for item, rev_idx, rev in cat_items:
+                fname = short_file(item["file"])
+                print(f"  │  [{item['id']:2d}] {item['topic']}")
+                print(f"  │       💡 {item['note'][:70]}")
+                if fname:
+                    print(f"  │       📄 {fname}")
+            print(f"  └{'─'*48}")
 
-    print(f"\n{'─'*60}")
-    print("  Commands:")
-    print("    python revise.py done <id>   → ✅ confident, mark complete")
-    print("    python revise.py weak <id>   → ❌ forgot, re-schedule from today")
-    print(f"{'─'*60}")
+    print_section(overdue,   "⚠️  OVERDUE")
+    print_section(today_due, "📅  TODAY")
+
+    print(f"\n  done <id>  ✅  weak <id>  ❌\n")
 
 def mark_done(db, item_id):
     today = str(date.today())
@@ -183,6 +191,34 @@ def show_all(db):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+def review_with_claude(db):
+    """Run Claude on today's revision output to check clarity and suggest improvements."""
+    import subprocess, io
+    from contextlib import redirect_stdout
+
+    # Capture today's output
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        show_today(db)
+    output = buf.getvalue()
+
+    prompt = f"""You are reviewing a spaced repetition learning output for a senior engineer.
+
+Here is what they need to revise today:
+
+{output}
+
+Please:
+1. Flag any topics whose KEY INSIGHT (💡) is too vague or hard to recall from
+2. Suggest a sharper one-liner for those (max 80 chars)
+3. Note if any topic title is unclear
+4. Give an overall ease-of-learning score (1-5) with one reason
+
+Be concise. No bullet spam."""
+
+    print("\n🤖 Asking Claude to review your revision output...\n")
+    subprocess.run(["claude", "-p", prompt], check=True)
+
 if __name__ == "__main__":
     db = load_db()
     args = sys.argv[1:]
@@ -197,5 +233,7 @@ if __name__ == "__main__":
         mark_weak(db, int(args[1]))
     elif args[0] == "all":
         show_all(db)
+    elif args[0] == "review":
+        review_with_claude(db)
     else:
         print(__doc__)

@@ -78,6 +78,21 @@ python3 revise.py add          # manually add a topic (interactive)
 python3 revise.py done <id>    # mark as remembered ✅
 python3 revise.py weak <id>    # mark as forgotten ❌ → reschedule D+1/D+3/D+7
 python3 revise.py all          # show all items and their status
+python3 revise.py review       # ask Claude to audit today's items for clarity
+```
+
+### What `review` does
+
+Runs `claude` on today's output and asks it to:
+
+- Flag any key insight that is too vague to recall from
+- Suggest a sharper one-liner for weak insights
+- Score ease-of-learning 1–5
+
+```bash
+python3 revise.py review
+# → 🤖 Asking Claude to review your revision output...
+# → Claude prints suggestions directly in terminal
 ```
 
 ---
